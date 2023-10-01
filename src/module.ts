@@ -189,7 +189,7 @@ export default defineNuxtModule<ModuleOptions>({
       }
     }
 
-    const cssFilename = addTemplate({
+    const themeCss = addTemplate({
       write: true,
       filename: "design-tokens/theme.css",
       getContents: () => {
@@ -297,14 +297,12 @@ export default defineNuxtModule<ModuleOptions>({
 
         return stanzas.join("\n\n");
       },
-    }).filename;
+    });
 
-    nuxt.options.css.push(cssFilename);
-
-    nuxt.options.nitro.externals?.inline?.push("outdent");
+    nuxt.options.css.push(themeCss.dst);
 
     if (nuxt.options.dev) {
-      const updateFilenames = new Set([cssFilename]);
+      const updateFilenames = new Set([themeCss.filename]);
 
       nuxt.hook("builder:watch", async (event, path) => {
         const fullPath = joinURL(nuxt.options.rootDir, path);
