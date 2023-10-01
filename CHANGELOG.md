@@ -1,6 +1,19 @@
 # Changelog
 
 
+## v1.1.1
+
+[compare changes](https://github.com/tkofh/nuxt-design-tokens/compare/v1.1.0...v1.1.1)
+
+### 🏡 Chore
+
+- **release:** V1.1.0 ([3ba9485](https://github.com/tkofh/nuxt-design-tokens/commit/3ba9485))
+- Fix config ([068e999](https://github.com/tkofh/nuxt-design-tokens/commit/068e999))
+
+### ❤️ Contributors
+
+- Tim Morris ([@tkofh](http://github.com/tkofh))
+
 ## v1.1.0
 
 
