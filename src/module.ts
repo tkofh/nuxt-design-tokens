@@ -299,6 +299,10 @@ export default defineNuxtModule<ModuleOptions>({
       },
     }).filename;
 
+    nuxt.options.css.push(cssFilename);
+
+    nuxt.options.nitro.externals?.inline?.push("outdent");
+
     if (nuxt.options.dev) {
       const updateFilenames = new Set([cssFilename]);
 
