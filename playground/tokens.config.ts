@@ -13,7 +13,7 @@ export default defineTokens({
           hover: {
             $tier: "state",
             $type: "color",
-            $value: { light: "grey", dark: "purple" },
+            $value: { light: "grey", dark: "magenta" },
           },
           active: {
             $tier: "state",

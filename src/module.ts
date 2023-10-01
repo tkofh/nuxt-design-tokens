@@ -4,6 +4,7 @@ import {
   addTemplate,
   addTypeTemplate,
   updateTemplates,
+  useLogger,
 } from "@nuxt/kit";
 import createJITI from "jiti";
 import outdent from "outdent";
@@ -35,6 +36,14 @@ function propertyFormatter(indent: number) {
 
   return function ([key, value]: [string, string]) {
     return `${prefix}${key}: ${value};`;
+  };
+}
+
+function performanceTimer() {
+  const start = performance.now();
+
+  return function () {
+    return Math.round(performance.now() - start);
   };
 }
 
@@ -84,6 +93,9 @@ export default defineNuxtModule<ModuleOptions>({
     patterns: ["/tokens.config.ts", "/**/tokens/**/*.ts", "/**/*.tokens.ts"],
   },
   async setup(options, nuxt) {
+    const logger = useLogger("design-tokens");
+
+    const measureSetupTime = performanceTimer();
     if (
       options.colorModeClassname != null &&
       !options.colorModeClassname.includes("{theme}")
@@ -293,6 +305,8 @@ export default defineNuxtModule<ModuleOptions>({
       nuxt.hook("builder:watch", async (event, path) => {
         const fullPath = joinURL(nuxt.options.rootDir, path);
         if (isTokenSource(fullPath)) {
+          const measureUpdateTimer = performanceTimer();
+
           let changed = false;
           if (event === "add" || event === "change") {
             importTokenSource(fullPath);
@@ -307,9 +321,21 @@ export default defineNuxtModule<ModuleOptions>({
             await updateTemplates({
               filter: (template) => updateFilenames.has(template.filename),
             });
+
+            logger.success(
+              `Updated up ${
+                Array.from(dictionary.all()).length
+              } Design Tokens (took ${measureUpdateTimer()} ms)`
+            );
           }
         }
       });
     }
+
+    logger.success(
+      `Transformed up ${
+        Array.from(dictionary.all()).length
+      } Design Tokens (took ${measureSetupTime()} ms)`
+    );
   },
 });
