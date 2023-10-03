@@ -13,7 +13,7 @@ export default defineTokens({
           hover: {
             $tier: "state",
             $type: "color",
-            $value: { light: "grey", dark: "magenta" },
+            $value: { light: "{ds.button.color.background}", dark: "magenta" },
           },
           active: {
             $tier: "state",
@@ -32,6 +32,22 @@ export default defineTokens({
             laptop: "20px",
           },
         },
+      },
+
+      shadow: {
+        $tier: "concept",
+        $type: "color",
+        $value: "0px 0px {ds.size.small} {ds.button.color.background}",
+      },
+    },
+
+    size: {
+      $tier: "category",
+
+      small: {
+        $tier: "variant",
+        $value: "10px",
+        $type: "size",
       },
     },
   },

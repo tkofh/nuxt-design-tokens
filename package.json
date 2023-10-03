@@ -32,8 +32,9 @@
   },
   "dependencies": {
     "@nuxt/kit": "^3.7.4",
-    "@token-alchemy/core": "^0.1.5",
-    "@token-alchemy/types": "^0.1.3",
+    "@token-alchemy/core": "^1.0.0",
+    "@token-alchemy/format": "^2.0.0",
+    "@token-alchemy/types": "^1.0.0",
     "defu": "^6.1.2",
     "glob": "^10.3.10",
     "jiti": "^1.20.0",
@@ -42,16 +43,16 @@
     "ufo": "^1.3.1"
   },
   "devDependencies": {
-    "@nuxt/devtools": "latest",
+    "@nuxt/devtools": "1.0.0-beta.0",
     "@nuxt/eslint-config": "^0.2.0",
     "@nuxt/module-builder": "^0.5.2",
     "@nuxt/schema": "^3.7.4",
     "@nuxt/test-utils": "^3.7.4",
-    "@types/node": "^18.18.1",
+    "@types/node": "^20.8.2",
     "changelogen": "^0.5.5",
     "eslint": "^8.50.0",
     "nuxt": "^3.7.4",
-    "vite-plugin-inspect": "0.7.38",
-    "vitest": "^0.33.0"
+    "vite-plugin-inspect": "0.7.40",
+    "vitest": "^0.34.6"
   }
 }

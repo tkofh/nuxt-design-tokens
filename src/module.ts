@@ -13,6 +13,7 @@ import { glob } from "glob";
 import { minimatch } from "minimatch";
 import { DesignToken, DesignTokensInput } from "@token-alchemy/types";
 import { createDictionary } from "@token-alchemy/core";
+import { formatReferences } from "@token-alchemy/format";
 import defu from "defu";
 
 export interface ModuleOptions {
@@ -203,54 +204,31 @@ export default defineNuxtModule<ModuleOptions>({
 
         for (const token of dictionary.all()) {
           const tokenKey = `--${token.key}`;
-          if (typeof token.value === "object") {
-            if ("light" in token.value && "dark" in token.value) {
-              lightProperties.set(
-                tokenKey,
-                options.outputReferences &&
-                  token.references.get("$value.light") != null
-                  ? `var(--${token.references.get("$value.light")!.key})`
-                  : String(token.value.light)
-              );
 
-              darkProperties.set(
-                tokenKey,
-                options.outputReferences &&
-                  token.references.get("$value.dark") != null
-                  ? `var(--${token.references.get("$value.dark")!.key})`
-                  : String(token.value.dark)
-              );
+          const tokenValue = formatReferences(token, (reference) =>
+            options.outputReferences
+              ? `var(--${reference.key})`
+              : String(reference.value)
+          );
+
+          if (typeof tokenValue === "object") {
+            if ("light" in tokenValue && "dark" in tokenValue) {
+              lightProperties.set(tokenKey, String(tokenValue.light));
+              darkProperties.set(tokenKey, String(tokenValue.dark));
             } else {
               for (const key of baseResponsiveKeys) {
-                baseProperties.set(
-                  tokenKey,
-                  options.outputReferences &&
-                    token.references.get(`$value.${key}`) != null
-                    ? `var(--${token.references.get(`$value.${key}`)!.key})`
-                    : String(token.value[key])
-                );
+                baseProperties.set(tokenKey, String(tokenValue[key]));
               }
               for (const key of conditionalResponsiveKeys) {
-                if (token.value[key] != null) {
+                if (tokenValue[key] != null) {
                   responsiveProperties
                     .get(key)!
-                    .set(
-                      tokenKey,
-                      options.outputReferences &&
-                        token.references.get(`$value.${key}`) != null
-                        ? `var(--${token.references.get(`$value.${key}`)!.key})`
-                        : String(token.value[key])
-                    );
+                    .set(tokenKey, String(tokenValue[key]));
                 }
               }
             }
           } else {
-            baseProperties.set(
-              tokenKey,
-              options.outputReferences && token.references.get("$value") != null
-                ? `var(--${token.references.get("$value")!.key})`
-                : String(token.value)
-            );
+            baseProperties.set(tokenKey, String(tokenValue));
           }
         }
         const stanzas: string[] = [];
