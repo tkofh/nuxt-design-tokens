@@ -1,6 +1,22 @@
 # Changelog
 
 
+## v1.2.0
+
+[compare changes](https://github.com/tkofh/nuxt-design-tokens/compare/v1.1.1...v1.2.0)
+
+### 🚀 Enhancements
+
+- Support multi reference values ([814c82f](https://github.com/tkofh/nuxt-design-tokens/commit/814c82f))
+
+### 🏡 Chore
+
+- **release:** V1.1.1 ([098802c](https://github.com/tkofh/nuxt-design-tokens/commit/098802c))
+
+### ❤️ Contributors
+
+- Tim Morris ([@tkofh](http://github.com/tkofh))
+
 ## v1.1.1
 
 [compare changes](https://github.com/tkofh/nuxt-design-tokens/compare/v1.1.0...v1.1.1)
