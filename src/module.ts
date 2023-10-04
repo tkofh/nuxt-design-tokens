@@ -1,6 +1,6 @@
 import {
   defineNuxtModule,
-  addImports,
+  createResolver,
   addTemplate,
   addTypeTemplate,
   updateTemplates,
@@ -15,10 +15,11 @@ import { DesignToken, DesignTokensInput } from "@token-alchemy/types";
 import { createDictionary } from "@token-alchemy/core";
 import { formatReferences } from "@token-alchemy/format";
 import defu from "defu";
+import { debounce } from "perfect-debounce";
 
 export interface ModuleOptions {
   screens: Record<string, string | null>;
-  colorModeClassname?: string | null | undefined;
+  colorModeClassname: string | false;
   outputReferences: boolean;
   attributes: Record<string, string>;
   groupAttributes: Record<string, string>;
@@ -48,12 +49,16 @@ function performanceTimer() {
   };
 }
 
-function formatPropertyMap(properties: Map<string, string>, indent: number) {
+function formatPropertyMap(
+  properties: Map<string, string>,
+  indent: number,
+  trimStart = true
+) {
   const formatter = propertyFormatter(indent);
   return Array.from(properties.entries())
     .map(formatter)
     .join("\n")
-    .slice(indent);
+    .slice(trimStart ? indent : 0);
 }
 
 export default defineNuxtModule<ModuleOptions>({
@@ -70,11 +75,7 @@ export default defineNuxtModule<ModuleOptions>({
     },
     colorModeClassname: "{theme}-mode",
     outputReferences: true,
-    attributes: {
-      type: ["color", "duration", "size", "amount", "keyword"]
-        .map((term) => `"${term}"`)
-        .join(" | "),
-    },
+    attributes: {},
     groupAttributes: {
       tier: [
         "system",
@@ -94,17 +95,19 @@ export default defineNuxtModule<ModuleOptions>({
     patterns: ["/tokens.config.ts", "/**/tokens/**/*.ts", "/**/*.tokens.ts"],
   },
   async setup(options, nuxt) {
+    const resolver = createResolver(import.meta.url);
     const logger = useLogger("design-tokens");
 
     const measureSetupTime = performanceTimer();
     if (
-      options.colorModeClassname != null &&
+      options.colorModeClassname !== false &&
       !options.colorModeClassname.includes("{theme}")
     ) {
-      options.colorModeClassname = null;
+      options.colorModeClassname = false;
     }
 
-    addImports({ from: "@token-alchemy/core", name: "defineTokens" });
+    nuxt.options.alias["#design-tokens/define"] =
+      resolver.resolve("./runtime/helpers");
 
     addTypeTemplate({
       write: true,
@@ -241,26 +244,40 @@ export default defineNuxtModule<ModuleOptions>({
           `);
         }
         if (lightProperties.size > 0) {
-          stanzas.push(outdent`
-            ${
-              options.colorModeClassname != null
-                ? `.${options.colorModeClassname.replace("{theme}", "light")}`
-                : "@media (prefers-color-scheme: light)"
-            } {
-              ${formatPropertyMap(lightProperties, 4)}
-            }
-          `);
+          const prefix =
+            options.colorModeClassname !== false
+              ? `.${options.colorModeClassname.replace("{theme}", "light")}`
+              : `@media (prefers-color-scheme: light) {\n  :root {`;
+          const suffix = options.colorModeClassname !== false ? "}" : "  }\n}";
+          stanzas.push(
+            [
+              prefix,
+              formatPropertyMap(
+                lightProperties,
+                options.colorModeClassname !== false ? 2 : 4,
+                false
+              ),
+              suffix,
+            ].join("\n")
+          );
         }
         if (darkProperties.size > 0) {
-          stanzas.push(outdent`
-            ${
-              options.colorModeClassname != null
-                ? `.${options.colorModeClassname.replace("{theme}", "dark")}`
-                : "@media (prefers-color-scheme: light)"
-            } {
-              ${formatPropertyMap(darkProperties, 4)}
-            }
-          `);
+          const prefix =
+            options.colorModeClassname !== false
+              ? `.${options.colorModeClassname.replace("{theme}", "dark")}`
+              : `@media (prefers-color-scheme: dark) {\n  :root {`;
+          const suffix = options.colorModeClassname !== false ? "}" : "  }\n}";
+          stanzas.push(
+            [
+              prefix,
+              formatPropertyMap(
+                darkProperties,
+                options.colorModeClassname !== false ? 2 : 4,
+                false
+              ),
+              suffix,
+            ].join("\n")
+          );
         }
         for (const key of conditionalResponsiveKeys) {
           const properties = responsiveProperties.get(key)!;
@@ -280,40 +297,63 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.css.push(themeCss.dst);
 
     if (nuxt.options.dev) {
-      const updateFilenames = new Set([themeCss.filename]);
+      const updateTemplateDsts = new Set([themeCss.dst]);
 
-      nuxt.hook("builder:watch", async (event, path) => {
-        const fullPath = joinURL(nuxt.options.rootDir, path);
-        if (isTokenSource(fullPath)) {
-          const measureUpdateTimer = performanceTimer();
+      nuxt.hook("vite:serverCreated", (vite) => {
+        async function updateTokens(measureUpdateTimer: () => number) {
+          dictionary = buildDictionary();
+          await updateTemplates({
+            filter: (template) => updateTemplateDsts.has(template.dst),
+          });
 
-          let changed = false;
-          if (event === "add" || event === "change") {
-            importTokenSource(fullPath);
-            changed = true;
-          } else if (event === "unlink") {
-            tokenSources.delete(fullPath);
-            changed = true;
-          }
+          await Promise.all(
+            Array.from(updateTemplateDsts).flatMap((dst) => {
+              const modules =
+                vite.moduleGraph.fileToModulesMap.get(dst) ?? new Set();
+              return Array.from(modules).map((module) => {
+                return vite.reloadModule(module);
+              });
+            })
+          );
 
-          if (changed) {
-            dictionary = buildDictionary();
-            await updateTemplates({
-              filter: (template) => updateFilenames.has(template.filename),
-            });
+          logger.success(
+            `Updated ${
+              Array.from(dictionary.all()).length
+            } Design Tokens (took ${measureUpdateTimer()} ms)`
+          );
+        }
+        if (vite.config.define?.["process.client"] === true) {
+          const triggerUpdateTokens = debounce(
+            (measureUpdateTimer: () => number) => {
+              updateTokens(measureUpdateTimer);
+            }
+          );
 
-            logger.success(
-              `Updated up ${
-                Array.from(dictionary.all()).length
-              } Design Tokens (took ${measureUpdateTimer()} ms)`
-            );
-          }
+          nuxt.hook("builder:watch", async (event, path) => {
+            const fullPath = joinURL(nuxt.options.rootDir, path);
+            if (isTokenSource(fullPath)) {
+              const measureUpdateTimer = performanceTimer();
+
+              let changed = false;
+              if (event === "add" || event === "change") {
+                importTokenSource(fullPath);
+                changed = true;
+              } else if (event === "unlink") {
+                tokenSources.delete(fullPath);
+                changed = true;
+              }
+
+              if (changed) {
+                triggerUpdateTokens(measureUpdateTimer);
+              }
+            }
+          });
         }
       });
     }
 
     logger.success(
-      `Transformed up ${
+      `Transformed ${
         Array.from(dictionary.all()).length
       } Design Tokens (took ${measureSetupTime()} ms)`
     );

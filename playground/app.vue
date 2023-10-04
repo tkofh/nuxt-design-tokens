@@ -1,8 +1,12 @@
 <template>
-  <div>
-    Nuxt module playground!
-  </div>
+  <div>Nuxt module playground!</div>
 </template>
 
-<script setup>
-</script>
+<script setup></script>
+
+<style>
+html {
+  background: var(--color-background);
+  color: var(--color-text);
+}
+</style>

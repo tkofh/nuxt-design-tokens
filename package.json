@@ -32,14 +32,15 @@
   },
   "dependencies": {
     "@nuxt/kit": "^3.7.4",
-    "@token-alchemy/core": "^1.0.0",
-    "@token-alchemy/format": "^2.0.0",
+    "@token-alchemy/core": "^1.0.1",
+    "@token-alchemy/format": "^2.0.1",
     "@token-alchemy/types": "^1.0.0",
     "defu": "^6.1.2",
     "glob": "^10.3.10",
     "jiti": "^1.20.0",
     "minimatch": "^9.0.3",
     "outdent": "^0.8.0",
+    "perfect-debounce": "^1.0.0",
     "ufo": "^1.3.1"
   },
   "devDependencies": {

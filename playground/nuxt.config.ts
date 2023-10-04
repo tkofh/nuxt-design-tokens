@@ -1,6 +1,6 @@
 export default defineNuxtConfig({
   modules: ["../src/module"],
-  devtools: { enabled: true },
+  // devtools: { enabled: true },
 
   designTokens: {
     screens: {
@@ -9,7 +9,7 @@ export default defineNuxtConfig({
       laptop: "screen and (min-width: 1024px)",
       desktop: "screen and (min-width: 1280px)",
     },
-    colorModeClassname: "{theme}-mode",
+    colorModeClassname: false, // "{theme}-mode",
     outputReferences: true,
   },
 });
