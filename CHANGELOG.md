@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v1.2.1
+
+[compare changes](https://github.com/tkofh/nuxt-design-tokens/compare/v1.2.0...v1.2.1)
+
+### 🩹 Fixes
+
+- Update css in hmr, do not auto import defineTokens ([6e6d1bf](https://github.com/tkofh/nuxt-design-tokens/commit/6e6d1bf))
+
+### ❤️ Contributors
+
+- Tim Morris ([@tkofh](http://github.com/tkofh))
+
 ## v1.2.0
 
 [compare changes](https://github.com/tkofh/nuxt-design-tokens/compare/v1.1.1...v1.2.0)
